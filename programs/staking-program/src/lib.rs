@@ -51,7 +51,9 @@ pub mod staking_program {
         Ok(())
     }
 
-    pub fn destake(_ctx: Context<Initialize>) -> Result<()> {
+    pub fn destake(ctx: Context<DeStake>) -> Result<()> {
+        let stake_info = &mut ctx.accounts.stake_info_account;
+
         Ok(())
     }
 }
@@ -115,6 +117,47 @@ pub struct Stake<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
+
+#[derive(Accounts)]
+pub struct DeStake<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [constants::VAULT_SEED],
+        bump,
+    )]
+    pub token_vault_account: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        seeds = [constants::STAKE_INFO_SEED, signer.key.as_ref()],
+        bump,
+    )]
+    pub stake_info_account: Account<'info, StakeInfo>,
+
+    #[account(
+        mut,
+        seeds = [constants::TOKEN_SEED, signer.key.as_ref()],
+        bump,
+    )]
+    pub stake_account: Account<'info, TokenAccount>,
+
+
+    #[account(
+        mut,
+        associated_token::mint = mint,
+        associated_token::authority = signer,
+    )]
+    pub user_token_account: Account<'info, TokenAccount>,
+
+    pub mint: Account<'info, Mint>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
+}
+
 
 #[account]
 pub struct StakeInfo {
